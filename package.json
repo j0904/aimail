@@ -1,0 +1,43 @@
+{
+  "name": "aimail",
+  "version": "0.0.1",
+  "description": "DIDComm v2 mediator & mailbox for agent-to-agent trading communication",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "aimail": "dist/cli/aimail.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "serve": "node dist/cli/aimail.js serve",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run tests/e2e/",
+    "test:integration": "vitest run tests/integration/",
+    "lint": "eslint src/ tests/ --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.20.0",
+    "@types/ws": "^8.5.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@credo-ts/core": "^0.7.0",
+    "@credo-ts/node": "^0.7.0",
+    "@credo-ts/didcomm": "^0.7.0",
+    "pg": "^8.21.0",
+    "uuid": "^11.0.0",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

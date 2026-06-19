@@ -1,0 +1,56 @@
+# Runs aimail alongside ../market's existing redpanda + postgres services.
+# Usage:  docker compose up
+#
+# This compose file assumes the market stack provides 'postgres' (and optional
+# 'redpanda'). When run standalone, it brings up its own postgres.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: marketplace
+      POSTGRES_USER: marketplace
+      POSTGRES_PASSWORD: marketplace
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace -d marketplace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  aimail:
+    build:
+      context: .
+      target: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIMAIL_PORT: "3080"
+      AIMAIL_PUBLIC_URL: "http://aimail:3080"
+      AIMAIL_WS_ENABLED: "true"
+      AIMAIL_DID_METHOD: "key"
+      PGHOST: "postgres"
+      PGPORT: "5432"
+      PGUSER: "marketplace"
+      PGPASSWORD: "marketplace"
+      PGDATABASE: "marketplace"
+      # Set this in production via .env or secret.
+      AIMAIL_KEY_PASSPHRASE: "change-me-in-prod"
+      AIMAIL_AUTO_GRANT_MEDIATION: "true"
+    ports:
+      - "3080:3080"
+    restart: unless-stopped
+
+  aimail-e2e:
+    build:
+      context: .
+      target: test
+    depends_on:
+      aimail:
+        condition: service_started
+    environment:
+      AIMAIL_URL: "http://aimail:3080"
+    command: ["npm", "run", "test:e2e"]
+    profiles: ["e2e"]
