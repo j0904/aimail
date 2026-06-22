@@ -242,7 +242,7 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     dependencies: agentDependencies,
     modules: {
       askar: new AskarModuleClass({ askar }),
-      outOfBand: new OutOfBandModule(),
+      outOfBand: new DidCommOutOfBandModule(),
       didComm: new DidCommModule({
         endpoints: args.endpoints,
         transports: {
