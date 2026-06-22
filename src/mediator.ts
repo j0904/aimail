@@ -242,7 +242,13 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     config: {},
     dependencies: agentDependencies,
     modules: {
-      askar: new AskarModuleClass({ askar }),
+      askar: new AskarModuleClass({
+        askar,
+        store: {
+          id: 'aimail',
+          key: args.config.keyPassphrase || 'insecure-dev-key',
+        },
+      }),
       didComm: new DidCommModule({
         endpoints: args.endpoints,
         transports: {
