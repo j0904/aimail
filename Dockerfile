@@ -15,7 +15,7 @@ CMD ["npm", "test"]
 
 # --- Production stage ---
 FROM node:22 AS production
-ENV NODE_ENV=production
+ENV NODE_ENV=production HOME=/app
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
