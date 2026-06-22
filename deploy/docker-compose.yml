@@ -1,6 +1,6 @@
 services:
   aimail:
-    image: ghcr.io/bigt-ai-platform/aimail:latest
+    image: ghcr.io/j0904/aimail:latest
     container_name: aimail
     restart: unless-stopped
     extra_hosts:

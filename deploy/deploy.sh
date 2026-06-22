@@ -36,7 +36,7 @@ SSH_USER="${SSH_USER:-root}"
 SSH_OPTS=(-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes)
 [ -f "$SSH_KEY" ] && SSH_OPTS+=(-i "$SSH_KEY")
 
-REGISTRY="${REGISTRY:-ghcr.io/bigt-ai-platform/aimail}"
+REGISTRY="${REGISTRY:-ghcr.io/j0904/aimail}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 IMAGE="${REGISTRY}:${IMAGE_TAG}"
 
