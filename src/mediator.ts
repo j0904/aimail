@@ -198,6 +198,31 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   // Outbound transports live in @credo-ts/didcomm in 0.7.
   const { DidCommHttpOutboundTransport, DidCommWsOutboundTransport } = credo;
 
+  // Dynamically import Askar to keep cold-start fast.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let AskarModuleClass: any;
+  try {
+    ({ AskarModule: AskarModuleClass } = await import('@credo-ts/askar'));
+  } catch (err) {
+    throw new Error(
+      `aimail requires @credo-ts/askar. ` +
+        `Run: npm install @credo-ts/askar. ` +
+        `Underlying error: ${(err as Error).message}`,
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let askar: any;
+  try {
+    ({ askar } = await import('@openwallet-foundation/askar-nodejs'));
+  } catch (err) {
+    throw new Error(
+      `aimail requires @openwallet-foundation/askar-nodejs. ` +
+        `Run: npm install @openwallet-foundation/askar-nodejs. ` +
+        `Underlying error: ${(err as Error).message}`,
+    );
+  }
+
   const inboundTransports: unknown[] = [
     new DidCommHttpInboundTransport({ port: args.config.port }),
   ];
@@ -212,16 +237,10 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   }
 
   const agent = new Agent({
-    config: {
-      // 0.7 InitConfig is minimal; endpoints/label move into the didComm module.
-    },
+    config: {},
     dependencies: agentDependencies,
     modules: {
-      // The didComm module owns endpoints, transports, the queue repo, and the
-      // mediator + message-pickup sub-modules. `as never` on the queue repo
-      // and transports because our structurally-compatible impl isn't on
-      // Credo's type tree (deliberate — keeps aimail decoupled from Credo
-      // internals so the non-Credo unit tests don't need it installed).
+      askar: new AskarModuleClass({ askar }),
       didComm: new DidCommModule({
         endpoints: args.endpoints,
         transports: {
@@ -231,8 +250,6 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
         queueTransportRepository: args.queueRepository as never,
         mediator: {
           autoAcceptMediationRequests: args.autoGrant,
-          // Queue then attempt live delivery: covers both online (push) and
-          // offline (Pickup 2.0 pull) recipients.
           messageForwardingStrategy:
             DidCommMessageForwardingStrategy.QueueAndLiveModeDelivery,
         },
@@ -240,7 +257,7 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
           protocols: [new DidCommMessagePickupV2Protocol()],
         },
       }),
-    },
+    } as never,
   });
 
   // Inject the mediator's static did:key so the same DID survives restarts.

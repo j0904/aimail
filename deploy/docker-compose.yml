@@ -1,0 +1,31 @@
+services:
+  aimail:
+    image: ghcr.io/bigt-ai-platform/aimail:latest
+    container_name: aimail
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - caddy_net
+    environment:
+      AIMAIL_PORT: "3080"
+      AIMAIL_PUBLIC_URL: "https://aimail.bigt.ai"
+      AIMAIL_WS_ENABLED: "true"
+      AIMAIL_DID_METHOD: "key"
+      AIMAIL_KEY_PASSPHRASE: "${AIMAIL_KEY_PASSPHRASE:?AIMAIL_KEY_PASSPHRASE is required}"
+      AIMAIL_AUTO_GRANT_MEDIATION: "true"
+      PGHOST: "${PGHOST:-host.docker.internal}"
+      PGPORT: "${PGPORT:-5435}"
+      PGUSER: "${PGUSER:-aimail}"
+      PGPASSWORD: "${PGPASSWORD:?PGPASSWORD is required}"
+      PGDATABASE: "${PGDATABASE:-aimail}"
+      AIMAIL_PG_SCHEMA: "${AIMAIL_PG_SCHEMA:-public}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy_net:
+    external: true

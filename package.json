@@ -30,9 +30,11 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@credo-ts/askar": "^0.7.0",
     "@credo-ts/core": "^0.7.0",
-    "@credo-ts/node": "^0.7.0",
     "@credo-ts/didcomm": "^0.7.0",
+    "@credo-ts/node": "^0.7.0",
+    "@openwallet-foundation/askar-nodejs": "^0.6.0",
     "pg": "^8.21.0",
     "uuid": "^11.0.0",
     "ws": "^8.18.0"
