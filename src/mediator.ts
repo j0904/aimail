@@ -119,7 +119,7 @@ export async function createMediator(
     },
     async start() {
       await agent.start();
-      invitationUrl = await createInvitationUrl(agent, config);
+      invitationUrl = await createInvitationUrl(agent.agent, config);
     },
     async stop() {
       await agent.stop();
@@ -157,6 +157,7 @@ interface BuildCredoArgs {
 
 /** Internal handle to the running Credo agent. */
 interface CredoAgentHandle {
+  agent: unknown;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -287,6 +288,7 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   }
 
   return {
+    agent,
     async start() {
       await agent.initialize();
     },
