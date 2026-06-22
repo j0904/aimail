@@ -187,7 +187,7 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   const { Agent } = core;
   const {
     DidCommModule,
-    OutOfBandModule,
+    DidCommOutOfBandModule,
     DidCommMessageForwardingStrategy,
     DidCommMessagePickupV2Protocol,
   } = credo;
@@ -277,13 +277,13 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   }
 
   // Build a reusable out-of-band invitation URL for the /api/mediator endpoint.
-  // In Credo 0.7 the OOB API lives on the agent.oob namespace once the
-  // OutOfBandModule is registered.
-  const oobApi = (agent as unknown as { oob: { createInvitation(cfg: {
+  // In Credo 0.7 the OutOfBand API lives on agent.outOfBand once the
+  // DidCommOutOfBandModule is registered with key 'outOfBand'.
+  const oobApi = (agent as unknown as { outOfBand: { createInvitation(cfg: {
     label?: string;
     handshake?: boolean;
     multiUseInvitation?: boolean;
-  }): Promise<{ outOfBandInvitation: { toUrl(opts: { domain: string }): string } }> } }).oob;
+  }): Promise<{ outOfBandInvitation: { toUrl(opts: { domain: string }): string } }> } }).outOfBand;
   const oobRecord = await oobApi.createInvitation({
     label: 'aimail-mediator',
     handshake: true,
