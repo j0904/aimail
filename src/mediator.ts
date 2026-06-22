@@ -194,7 +194,6 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     DidCommMessagePickupV2Protocol,
   } = credo;
   const {
-    DidCommHttpInboundTransport,
     DidCommWsInboundTransport,
     agentDependencies,
   } = node;
@@ -230,9 +229,11 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     );
   }
 
-  const inboundTransports: unknown[] = [
-    new DidCommHttpInboundTransport({ port: args.config.port }),
-  ];
+  const inboundTransports: unknown[] = [];
+  // DidCommHttpInboundTransport is omitted here because the main HTTP server
+  // (REST shim + WS push) handles all HTTP traffic on config.port. If we added
+  // it on that port the bind would conflict. DIDComm-over-HTTP messages arrive
+  // via the REST shim or WebSocket push instead.
   if (args.config.wsEnabled) {
     inboundTransports.push(
       new DidCommWsInboundTransport({ port: wsPort(args.config) }),
