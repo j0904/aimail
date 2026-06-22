@@ -200,6 +200,22 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   // Outbound transports live in @credo-ts/didcomm in 0.7.
   const { DidCommHttpOutboundTransport, DidCommWsOutboundTransport } = credo;
 
+  // IMPORTANT: import askar-nodejs BEFORE @credo-ts/askar.
+  // askar-shared is a CJS module. ESM `import { askar }` from CJS captures
+  // the value at import time (NOT a live binding). So NativeAskar.register()
+  // must fire before @credo-ts/askar's AskarKeyManagementService reads `askar`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let askar: any;
+  try {
+    ({ askar } = await import('@openwallet-foundation/askar-nodejs'));
+  } catch (err) {
+    throw new Error(
+      `aimail requires @openwallet-foundation/askar-nodejs. ` +
+        `Run: npm install @openwallet-foundation/askar-nodejs. ` +
+        `Underlying error: ${(err as Error).message}`,
+    );
+  }
+
   // Dynamically import Askar to keep cold-start fast.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let AskarModuleClass: any;
@@ -209,18 +225,6 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     throw new Error(
       `aimail requires @credo-ts/askar. ` +
         `Run: npm install @credo-ts/askar. ` +
-        `Underlying error: ${(err as Error).message}`,
-    );
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let askar: any;
-  try {
-    ({ askar } = await import('@openwallet-foundation/askar-nodejs'));
-  } catch (err) {
-    throw new Error(
-      `aimail requires @openwallet-foundation/askar-nodejs. ` +
-        `Run: npm install @openwallet-foundation/askar-nodejs. ` +
         `Underlying error: ${(err as Error).message}`,
     );
   }
