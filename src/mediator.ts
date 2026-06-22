@@ -108,15 +108,18 @@ export async function createMediator(
     autoGrant: config.autoGrantMediation,
   });
 
+  let invitationUrl: string | undefined;
+
   return {
     did: keyPair.did,
     endpoints,
     store,
     get invitationUrl() {
-      return agent.invitationUrl;
+      return invitationUrl ?? '';
     },
     async start() {
       await agent.start();
+      invitationUrl = await createInvitationUrl(agent, config);
     },
     async stop() {
       await agent.stop();
@@ -152,9 +155,8 @@ interface BuildCredoArgs {
   autoGrant: boolean;
 }
 
-/** Internal handle to the running Credo agent and its invitation URL. */
+/** Internal handle to the running Credo agent. */
 interface CredoAgentHandle {
-  invitationUrl: string;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -274,26 +276,7 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
     // Non-fatal: see comment above.
   }
 
-  // Build a reusable out-of-band invitation URL for the /api/mediator endpoint.
-  // DidCommApi exposes `oob` (DidCommOutOfBandApi) at agent.modules.didComm.oob.
-  // Note: BaseAgent only auto-exposes agent.didcomm (lowercase) which conflicts
-  // with the actual module key `didComm` (camelCase) — so we go through modules.
-  const oobApi = (agent as unknown as { modules: { didComm: { oob: { createInvitation(cfg: {
-    label?: string;
-    handshake?: boolean;
-    multiUseInvitation?: boolean;
-  }): Promise<{ outOfBandInvitation: { toUrl(opts: { domain: string }): string } }> } } } }).modules.didComm.oob;
-  const oobRecord = await oobApi.createInvitation({
-    label: 'aimail-mediator',
-    handshake: true,
-    multiUseInvitation: true,
-  });
-  const invitationUrl = oobRecord.outOfBandInvitation.toUrl({
-    domain: args.config.publicUrl,
-  });
-
   return {
-    invitationUrl,
     async start() {
       await agent.initialize();
     },
@@ -309,6 +292,42 @@ function wsPort(config: AimailConfig): number {
   // which owns the primary port. (Credo's WS inbound and our REST HTTP server
   // cannot both listen on the same port.)
   return config.port + 1;
+}
+
+// --- Create OOB invitation (must be called after agent.initialize()) ----
+
+async function createInvitationUrl(
+  agent: unknown,
+  config: AimailConfig,
+): Promise<string> {
+  // DidCommApi exposes `oob` (DidCommOutOfBandApi) at agent.modules.didComm.oob.
+  // BaseAgent lowercases module keys, so agent.didcomm (lowercase) is set but
+  // the actual key in modules is `didComm` (camelCase), so go through modules.
+  const oobApi = (
+    agent as {
+      modules: {
+        didComm: {
+          oob: {
+            createInvitation(cfg: {
+              label?: string;
+              handshake?: boolean;
+              multiUseInvitation?: boolean;
+            }): Promise<{
+              outOfBandInvitation: { toUrl(opts: { domain: string }): string };
+            }>;
+          };
+        };
+      };
+    }
+  ).modules.didComm.oob;
+  const oobRecord = await oobApi.createInvitation({
+    label: 'aimail-mediator',
+    handshake: true,
+    multiUseInvitation: true,
+  });
+  return oobRecord.outOfBandInvitation.toUrl({
+    domain: config.publicUrl,
+  });
 }
 
 // --- base64 helpers (no Buffer dependency, works with Uint8Array) ---
