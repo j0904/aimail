@@ -275,12 +275,14 @@ async function buildCredoAgent(args: BuildCredoArgs): Promise<CredoAgentHandle> 
   }
 
   // Build a reusable out-of-band invitation URL for the /api/mediator endpoint.
-  // DidCommApi exposes `oob` (DidCommOutOfBandApi) at agent.didcomm.oob.
-  const oobApi = (agent as unknown as { didcomm: { oob: { createInvitation(cfg: {
+  // DidCommApi exposes `oob` (DidCommOutOfBandApi) at agent.modules.didComm.oob.
+  // Note: BaseAgent only auto-exposes agent.didcomm (lowercase) which conflicts
+  // with the actual module key `didComm` (camelCase) — so we go through modules.
+  const oobApi = (agent as unknown as { modules: { didComm: { oob: { createInvitation(cfg: {
     label?: string;
     handshake?: boolean;
     multiUseInvitation?: boolean;
-  }): Promise<{ outOfBandInvitation: { toUrl(opts: { domain: string }): string } }> } } }).didcomm.oob;
+  }): Promise<{ outOfBandInvitation: { toUrl(opts: { domain: string }): string } }> } } } }).modules.didComm.oob;
   const oobRecord = await oobApi.createInvitation({
     label: 'aimail-mediator',
     handshake: true,
